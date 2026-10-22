@@ -1,0 +1,43 @@
+import express, { Request, Response } from 'express'
+import cors from 'cors'
+import 'dotenv/config';
+import { Collection, MongoClient } from 'mongodb';
+
+const app = express()
+const port = 5000
+
+app.use(cors())
+const client = new MongoClient(process.env.MONGODB_URI as string);
+app.get('/', (req:Request, res:Response) => {
+  res.send('Hello World!')
+})
+export async function connectToMongoDB() {
+  try {
+    const db = client.db('knowledge_it')
+   const courseCollection : Collection<Document> = db.collection('course')
+   
+    await client.connect();
+    console.log("You successfully connected to MongoDB!");
+    app.post('/app/new_course' , async(req:Request,res:Response)=>{
+      try {
+         const body = req.body
+         const result = await courseCollection.insertOne(body)
+         res.status(201).json(result)
+      } catch (error) {
+        console.log(error)
+         res.status(500).json({
+            success: false,
+            message: "Failed to create course",
+          });
+      }
+    })
+    return client;
+  } catch (err) {
+    console.dir(err);
+  }
+}
+connectToMongoDB()
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})
