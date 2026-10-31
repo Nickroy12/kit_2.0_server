@@ -50,6 +50,33 @@ export async function connectToMongoDB() {
       const result = await courseCollection.findOne(query);
   res.send(result);
     })
+    app.delete('/app/course/:id',async(req:Request<{id:string}> ,res:Response):Promise<void>=>{
+      const id = req.params.id  
+      const query = {
+        _id : new ObjectId(id)
+      }
+      const result = await courseCollection.deleteOne(query);
+  if (result.deletedCount === 1) {
+    res.status(200).send({ message: "Course deleted successfully" });
+  } else {
+    res.status(404).send({ message: "Course not found" });
+  }
+    })
+    app.patch('/app/course/:id', async(req:Request<{id:string}>, res:Response):Promise<void>=>{
+      const id = req.params.id
+      const query = {
+        _id: new ObjectId(id)
+      }
+      const updateDoc = {
+        $set: req.body
+      }
+      const result = await courseCollection.updateOne(query, updateDoc)
+      if (result.matchedCount === 1) {
+        res.status(200).json({ success: true, message: "Course updated successfully", result })
+      } else {
+        res.status(404).json({ success: false, message: "Course not found" })
+      }
+    })
     return client;
   } catch (err) {
     console.dir(err);
